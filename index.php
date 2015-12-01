@@ -43,10 +43,11 @@ class Polygon
     {
         return self::$sizeX;
     }  
-    public static function getSizeY() // функция для получения размеров полигона
+  public static function getSizeY() // функция для получения размеров полигона
     {
         return self::$sizeY;
     }
+
 }
 
 // Класс Позиция
@@ -67,7 +68,24 @@ class Position
   public static function getPosY() 
     {
         return self::$posY;
-    }    
+    }
+    
+  /**
+   * Проверка, находится ли ровер в пределах полигона
+   *
+   * @param int $sizeX размер полигона по оси X
+   * @param int $sizeY размер полигона по оси Y
+   * @param int $posX позиция ровера по оси X
+   * @param int $posY позиция ровера по оси Y      
+   * @return bool      
+   **/           
+  public static function checkPos($sizeX,$sizeY,$posX,$posY)
+    {
+        if ($posX > $sizeX or $posX < 0 or $posY > $sizeY or $posY < 0)
+          return false;
+        else
+          return true;
+    } 
 }
 
 // Класс Ориентация
@@ -118,10 +136,6 @@ class Moving
     if ($x == "L") self::goLeft();
     if ($x == "R") self::goRight();
     if ($x == "M") self::goForward();
-    
-    /*if ($x == self::$left) self::goLeft();
-    if ($x == self::$right) self::goRight();
-    if ($x == self::$forward) self::goForward();*/
   }
 
   public function goLeft()
@@ -190,7 +204,10 @@ class Parser
       $x = $size[0];
       $y = $size[1];
       if (is_numeric($x) && is_numeric($y))
-        Polygon::setSize($x,$y);
+        {
+          Polygon::setSize($x,$y);
+          echo "Установленный размер полигона: ". Polygon::getSizeX()  . "x" . Polygon::getSizeY() . "<br>";
+        }
       else 
         echo $error;
     } 
@@ -213,6 +230,7 @@ class Parser
       {
         Position::setPos($posX,$posY);
         Orientation::setSide($side);
+        echo "Изначальная позиция ровера: ". Position::getPosX()  . " " . Position::getPosY() . " " . Orientation::getSide() ."<br>";
       }
       else 
         echo $error;
@@ -226,10 +244,18 @@ class Parser
   {
     $error = "Неверно заданы команды для ровера!<br>";
     $s = strtoupper(trim($s));
-    $commands = str_split($s);; // получаем массив команд 
+    $commands = str_split($s); // получаем массив команд 
     foreach ($commands as $value) {
       if (Moving::checkMove($value))
-        Moving::moveTo($value);
+        {
+          Moving::moveTo($value);
+          if (Position::checkPos(Polygon::getSizeX(),Polygon::getSizeY(),Position::getPosX(),Position::getPosY()) == false)
+            {
+              echo "Ровер выехал за пределы полигона! (". Position::getPosX()  . " " . Position::getPosY() . " " . Orientation::getSide() .")<br>";
+              break;
+            }
+          //echo "-Измененная позиция ровера: ". Position::getPosX()  . " " . Position::getPosY() . " " . Orientation::getSide() ."<br>";
+        }
       else 
         {
           echo $error;
@@ -237,6 +263,7 @@ class Parser
           break;
         }
     }
+    echo "Измененная позиция ровера: ". Position::getPosX()  . " " . Position::getPosY() . " " . Orientation::getSide() ."<br>";
   }
 }
 // ------------------------
@@ -252,20 +279,18 @@ class Parser
 //Orientation::setSide("E");
 //Parser::parsPosition(" 44 123 e");
 
-echo "Позиция ровера : " . Position::getPosX() . " ". Position::getPosY() . " " . Orientation::getSide() . "<br>";
+//echo "Позиция ровера : " . Position::getPosX() . " ". Position::getPosY() . " " . Orientation::getSide() . "<br>";
 /*Moving::moveTo("M");
 Moving::moveTo("M");
 Moving::moveTo("L");
 Moving::moveTo("M");*/
 
-$_GET['textarea']="10 52
-0 0 E
-MMLMM";
-Parser::parsInput($_GET['textarea']);
+$_GET['textarea']="5 5
+1 2 N
+LMLMLMLMM
+3 3 E
+MMRMMRMRRM";
 
-echo "Новый размер полигона ". Polygon::getSizeX()  . "x" . Polygon::getSizeY() . "<br>";
+Parser::parsInput($_GET['textarea']); // парсим входные данные и исполняем команды
 
-//Parser::parsMoving(" mmLM ");
-
-  echo "Позиция ровера : " . Position::getPosX() . " ". Position::getPosY() . " " . Orientation::getSide() . "<br>";
 ?>
